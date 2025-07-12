@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Наследство Теней: Детективная История</title>
+    <style>
+        /* Базовые стили для игры */
+        body {
+            font-family: 'Georgia', serif; /* Более "детективный" шрифт */
+            background-color: #e0e0e0; /* Светло-серый фон */
+            color: #333;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.6;
+            box-sizing: border-box;
+        }
+        #game-container {
+            background-color: #fff;
+            border: 2px solid #555; /* Темнее рамка */
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 95%;
+            width: 100%;
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3); /* Более выраженная тень */
+            box-sizing: border-box;
+        }
+        h1 {
+            color: #4a004a; /* Глубокий фиолетовый/бордовый */
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #666;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        #story-text {
+            min-height: 150px;
+            margin-bottom: 20px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-size: 1.1em;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+        }
+        #actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .action-button {
+            background-color: #5d3f6a; /* Темно-фиолетовый */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            flex-grow: 1;
+            min-width: 130px;
+            max-width: 48%;
+            box-sizing: border-box;
+        }
+        @media (max-width: 480px) {
+            .action-button {
+                max-width: 100%;
+            }
+        }
+        .action-button:hover {
+            background-color: #4a004a;
+            transform: translateY(-2px);
+        }
+        .action-button:active {
+            transform: translateY(0);
+        }
+        #game-info {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        #inventory, #attention-info {
+            background-color: #f0f0f0; /* Светлее для инфо-блоков */
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        #attention-bar {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 5px;
+            height: 20px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        #attention-fill {
+            height: 100%;
+            background-color: #8bb14c; /* Зеленый для внимательности */
+            width: 0%;
+            transition: width 0.5s ease-out;
+        }
+        #inventory-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #inventory-list li {
+            padding: 5px 0;
+            border-bottom: 1px dotted #bbb;
+            font-size: 0.95em;
+        }
+        #inventory-list li:last-child {
+            border-bottom: none;
+        }
+        .game-over-message {
+            color: #d32f2f; /* Красный для сообщения о конце игры */
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Наследство Теней</h1>
+        <div id="story-text"></div>
+        <div id="actions">
+            </div>
+        <div id="game-info">
+            <div id="inventory">
+                <h2>Инвентарь:</h2>
+                <ul id="inventory-list">
+                    <li>(пусто)</li>
+                </ul>
+            </div>
+            <div id="attention-info">
+                <h2>Внимательность:</h2>
+                <div id="attention-bar">
+                    <div id="attention-fill"></div>
+                </div>
+                <p id="attention-text">50/100</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Данные Игры ---
+        const ITEMS = {
+            "письмо_юриста": { name: "Письмо от Юриста", description: "Официальное письмо о наследстве, от юридической фирмы 'Гримшоу и Партнеры'." },
+            "старый_ключ": { name: "Старый ключ", description: "Массивный, потемневший ключ с необычной гравировкой. Возможно, от особняка." },
+            "странная_записка": { name: "Странная Записка", description: "Пожелтевшая бумага с неразборчивым почерком и странными символами. Похоже на шифр.", type: "puzzle" }
+        };
+
+        const LOCATIONS = {
+            "юридическая_контора": {
+                name: "Юридическая Контора 'Гримшоу и Партнеры'",
+                description: "Вы сидите в душном кабинете, пропахшем старой бумагой и надеждами. Пожилой юрист, мистер Гримшоу, медленно проталкивает по столу пожелтевший конверт. 'Это касается вашего дальнего родственника...', - начинает он.",
+                exits: { "Открыть конверт": "получение_наследства" },
+                items: [], // Здесь пока нет предметов, они появятся после действия
+                attentionImpact: 0,
+                visited: false
+            },
+            "получение_наследства": {
+                name: "Получение Наследства",
+                description: "Внутри конверта вы находите официальные бумаги о вашем прадеде, о котором вы едва слышали, свидетельство о смерти и... старый, необычно массивный ключ. К нему прикреплена пожелтевшая записка с символами. 'Всё это ваше, мистер/мисс...', - говорит юрист, - 'включая особняк на окраине города. Хотя... я бы не спешил туда ехать.'",
+                exits: { "Спросить об особняке": "разговор_юрист_особняк", "Взять ключ и записку": "покинуть_контору" },
+                items: ["старый_ключ", "странная_записка"], // Предметы появляются здесь
+                attentionImpact: 10, // Увеличивает внимательность, так как герой обращает внимание на детали
+                visited: false
+            },
+            "разговор_юрист_особняк": {
+                name: "Беседа с Юристом об Особняке",
+                description: "Мистер Гримшоу поправляет очки. 'Особняк... он давно пустует. Ходят слухи. Странные вещи происходили. Никто не хочет покупать. Ваш прадед был... эксцентричным человеком. Некоторые считают, что он что-то скрывал.' Юрист смотрит на вас с беспокойством.",
+                exits: { "Покинуть контору": "покинуть_контору" },
+                items: [],
+                attentionImpact: 5,
+                visited: false
+            },
+            "покинуть_контору": {
+                name: "Возвращение Домой",
+                description: "Вы покидаете душную контору. На улице яркий свет дня кажется неестественным после мрачной атмосферы. В руках у вас ключ и странная записка. Мысли о заброшенном особняке и словах юриста не дают покоя. Кажется, ваша обычная жизнь только что закончилась.",
+                exits: { "Отправиться в особняк": "особняк_снаружи", "Изучить записку дома": "изучение_записки" },
+                items: [],
+                attentionImpact: 0,
+                visited: false
+            },
+            "особняк_снаружи": {
+                name: "Заброшенный Особняк: Снаружи",
+                description: "Вы стоите перед массивными чугунными воротами. За ними — заросший сад и сам особняк, темный и молчаливый. Окна кажутся пустыми глазницами, смотрящими на вас. Воздух вокруг кажется плотным, а тишина — неестественной. Где-то вдалеке слышится карканье ворона.",
+                exits: { "Попытаться открыть ворота": "ворота_особняка", "Осмотреть окрестности": "осмотр_особняка_снаружи" },
+                items: [],
+                attentionImpact: 15,
+                visited: false
+            },
+            "изучение_записки": {
+                name: "Изучение Странной Записки",
+                description: "Дома, в спокойной обстановке, вы раскладываете пожелтевшую записку. Символы на ней кажутся бессмысленными, но в них чувствуется какая-то логика. Это явно шифр. Ваша внимательность поможет вам.",
+                exits: { "Попытаться расшифровать": "попытка_расшифровки_записки", "Отправиться в особняк": "особняк_снаружи" },
+                items: [],
+                attentionImpact: 5,
+                visited: false
+            },
+            "попытка_расшифровки_записки": {
+                name: "Попытка Расшифровки",
+                description: "Вы сосредоточенно изучаете записку. Некоторые символы кажутся повторяющимися, другие напоминают обрывки слов. Это сложно, но вы чувствуете, что разгадка близка. (Требуется определенный уровень внимательности)",
+                exits: {}, // Динамически добавляются после проверки внимания
+                items: [],
+                attentionImpact: -10, // Может уменьшить внимательность, если не получится
+                visited: false,
+                requiredAttention: 60 // Пример: Требуется 60 внимательности для успешной расшифровки
+            }
+            // Добавьте больше локаций по мере развития сюжета
+        };
+
+        // --- Переменные Состояния Игры ---
+        let currentLocation = "юридическая_контора";
+        let inventory = [];
+        let attentionLevel = 50; // Начальный уровень внимательности
+        const MAX_ATTENTION = 100;
+
+        // --- Элементы DOM ---
+        const storyTextElement = document.getElementById('story-text');
+        const actionsElement = document.getElementById('actions');
+        const inventoryListElement = document.getElementById('inventory-list');
+        const attentionFillElement = document.getElementById('attention-fill');
+        const attentionTextElement = document.getElementById('attention-text');
+
+        // --- Функции Игровой Логики ---
+
+        function displayLocation(locationId) {
+            const location = LOCATIONS[locationId];
+            if (!location) {
+                storyTextElement.innerText = "Ошибка: Локация не найдена. Попробуйте перезагрузить игру.";
+                actionsElement.innerHTML = "";
+                return;
+            }
+
+            storyTextElement.innerText = location.description;
+
+            // Обновляем внимательность при первом посещении
+            if (!location.visited) {
+                attentionLevel += location.attentionImpact;
+                location.visited = true;
+            }
+            updateAttention();
+
+            actionsElement.innerHTML = ""; // Очищаем предыдущие действия
+
+            // Динамические действия в зависимости от локации
+            if (locationId === "попытка_расшифровки_записки") {
+                if (attentionLevel >= location.requiredAttention) {
+                    storyTextElement.innerText += "\n\nВнезапно символы складываются в слова! Это карта... и инструкции. Вы расшифровали ее!";
+                    // Добавляем новые выходы или предметы после успешной расшифровки
+                    const newPuzzleExitButton = document.createElement('button');
+                    newPuzzleExitButton.classList.add('action-button');
+                    newPuzzleExitButton.innerText = "Расшифрованная карта указывает на..."; // Пример
+                    newPuzzleExitButton.onclick = () => {
+                        currentLocation = "место_по_карте"; // Новая локация
+                        displayLocation(currentLocation);
+                    };
+                    actionsElement.appendChild(newPuzzleExitButton);
+                } else {
+                    storyTextElement.innerText += "\n\nВы пытаетесь, но символы слишком запутаны. Вам не хватает внимательности, чтобы понять их. Возможно, нужно найти что-то, что поможет вам сосредоточиться или увеличит вашу внимательность.";
+                    const goBackButton = document.createElement('button');
+                    goBackButton.classList.add('action-button');
+                    goBackButton.innerText = "Вернуться к изучению записки";
+                    goBackButton.onclick = () => displayLocation("изучение_записки");
+                    actionsElement.appendChild(goBackButton);
+                    attentionLevel = Math.max(0, attentionLevel - 10); // Уменьшаем внимательность при неудаче
+                    updateAttention();
+                }
+            }
+
+
+            // Добавляем кнопки переходов (выходов)
+            for (const exitText in location.exits) {
+                const button = document.createElement('button');
+                button.classList.add('action-button');
+                button.innerText = exitText;
+                button.onclick = () => {
+                    // Обработка конкретных переходов с условиями, если нужно
+                    currentLocation = location.exits[exitText];
+                    displayLocation(currentLocation);
+                };
+                actionsElement.appendChild(button);
+            }
+
+            // Добавляем кнопки для подбора предметов
+            if (location.items && location.items.length > 0) {
+                // Создаем временный массив для предметов, которые можно взять в этой локации
+                let itemsAvailableInLocation = location.items.filter(itemId => !inventory.includes(itemId));
+
+                if (itemsAvailableInLocation.length > 0) {
+                    itemsAvailableInLocation.forEach(itemId => {
+                        const item = ITEMS[itemId];
+                        if (item) {
+                            const button = document.createElement('button');
+                            button.classList.add('action-button');
+                            button.innerText = `Взять: ${item.name}`;
+                            button.onclick = () => takeItem(itemId, location);
+                            actionsElement.appendChild(button);
+                        }
+                    });
+                }
+            }
+
+            // Добавляем кнопки для использования предметов из инвентаря (если есть эффект)
+            if (inventory.length > 0) {
+                inventory.forEach(itemId => {
+                    const item = ITEMS[itemId];
+                    if (item && item.effect) {
+                        const button = document.createElement('button');
+                        button.classList.add('action-button');
+                        button.innerText = `Использовать: ${item.name}`;
+                        button.onclick = () => useItem(itemId);
+                        actionsElement.appendChild(button);
+                    }
+                });
+            }
+        }
+
+        function updateInventory() {
+            inventoryListElement.innerHTML = "";
+            if (inventory.length === 0) {
+                inventoryListElement.innerHTML = "<li>(пусто)</li>";
+            } else {
+                inventory.forEach(itemId => {
+                    const item = ITEMS[itemId];
+                    if (item) {
+                        const listItem = document.createElement('li');
+                        listItem.innerText = `${item.name}: ${item.description}`;
+                        inventoryListElement.appendChild(listItem);
+                    }
+                });
+            }
+        }
+
+        function updateAttention() {
+            attentionLevel = Math.max(0, Math.min(attentionLevel, MAX_ATTENTION));
+            const percentage = (attentionLevel / MAX_ATTENTION) * 100;
+            attentionFillElement.style.width = `${percentage}%`;
+            attentionTextElement.innerText = `${attentionLevel}/${MAX_ATTENTION}`;
+
+            // Пример: если внимательность падает слишком низко
+            if (attentionLevel < 20 && attentionLevel > 0) {
+                // Можно добавить легкие негативные эффекты или предупреждения
+            } else if (attentionLevel === 0) {
+                endGame("недостаточно_внимательности");
+            }
+        }
+
+        function takeItem(itemId, location) {
+            if (!inventory.includes(itemId)) {
+                inventory.push(itemId);
+                // Удаляем предмет из локации, чтобы его нельзя было взять снова
+                location.items = location.items.filter(item => item !== itemId);
+                updateInventory();
+                displayLocation(currentLocation); // Обновляем кнопки действий
+            }
+        }
+
+        function useItem(itemId) {
+            const item = ITEMS[itemId];
+            if (item && item.effect) {
+                switch (item.effect) {
+                    // Добавьте эффекты для предметов, если они будут
+                    // case "увеличить_внимательность":
+                    //     attentionLevel += 20;
+                    //     storyTextElement.innerText += "\nВы чувствуете прилив ясности. Ваша внимательность улучшилась.";
+                    //     break;
+                    default:
+                        storyTextElement.innerText += `\nВы пытаетесь использовать ${item.name}, но сейчас это не дает никакого видимого эффекта.`;
+                        break;
+                }
+                // inventory = inventory.filter(id => id !== itemId); // Удаляем использованный предмет, если он одноразовый
+                updateInventory();
+                updateAttention();
+                displayLocation(currentLocation); // Обновляем кнопки действий
+            } else {
+                storyTextElement.innerText += `\nВы не можете использовать ${item.name} таким образом.`;
+            }
+        }
+
+
+        function endGame(reason) {
+            actionsElement.innerHTML = "";
+            const gameOverMessage = document.createElement('p');
+            gameOverMessage.classList.add('game-over-message');
+
+            if (reason === "недостаточно_внимательности") {
+                gameOverMessage.innerText = "Вы потеряли нить расследования, слишком много деталей ускользнуло от вашего внимания. Тайна остается неразгаданной...";
+            } else {
+                gameOverMessage.innerText = "Игра окончена. " + reason;
+            }
+            storyTextElement.appendChild(gameOverMessage);
+
+            const restartButton = document.createElement('button');
+            restartButton.classList.add('action-button');
+            restartButton.innerText = "Начать заново";
+            restartButton.onclick = () => location.reload();
+            actionsElement.appendChild(restartButton);
+        }
+
+        // --- Запуск Игры ---
+        window.onload = () => {
+            displayLocation(currentLocation);
+            updateInventory();
+            updateAttention(); // Обновляем индикатор внимательности при старте
+        };
+    </script>
+</body>
+</html>
