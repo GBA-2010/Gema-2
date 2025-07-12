@@ -8,68 +8,84 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Общие стили для тела страницы */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a202c; /* Dark background for a mysterious feel */
-            color: #e2e8f0; /* Light text color */
+            background-color: #1a202c; /* Темный фон для таинственной атмосферы */
+            color: #e2e8f0; /* Светлый цвет текста */
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
+            min-height: 100vh; /* Минимальная высота на весь экран */
+            width: 100vw; /* Ширина на весь экран */
+            margin: 0; /* Убираем отступы по умолчанию */
+            padding: 0; /* Убираем внутренние отступы по умолчанию */
+            overflow: auto; /* Разрешаем прокрутку, если контент не помещается */
         }
+        /* Контейнер игры */
         .game-container {
-            background-color: #2d3748; /* Slightly lighter dark background for the container */
-            border-radius: 1.5rem; /* More rounded corners */
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5); /* Deeper shadow */
-            max-width: 960px;
-            width: 100%;
+            background-color: #2d3748; /* Немного более светлый темный фон для контейнера */
+            border-radius: 1.5rem; /* Более закругленные углы */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5); /* Глубокая тень */
+            /* Удаляем max-width, чтобы контейнер мог занимать всю доступную ширину */
+            width: 95%; /* Занимаем почти всю ширину для адаптивности */
+            height: 95vh; /* Занимаем почти всю высоту для адаптивности */
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: hidden; /* Скрываем излишки контента */
         }
+        /* Заголовок игры */
         .header {
-            background-color: #4a5568; /* Header background */
+            background-color: #4a5568; /* Фон заголовка */
             border-bottom: 2px solid #2d3748;
             padding: 1.5rem;
             text-align: center;
-            font-size: 2.25rem; /* Larger title */
+            font-size: 2.25rem; /* Больший размер заголовка */
             font-weight: 700;
-            color: #a0aec0; /* Lighter header text */
+            color: #a0aec0; /* Более светлый текст заголовка */
             border-top-left-radius: 1.5rem;
             border-top-right-radius: 1.5rem;
         }
+        /* Основное содержимое игры (боковая панель + главная область) */
         .game-content {
             display: flex;
             flex-direction: column;
             padding: 1.5rem;
             gap: 1.5rem;
+            flex-grow: 1; /* Позволяет содержимому занимать оставшееся пространство */
+            overflow: auto; /* Добавляем прокрутку для основного содержимого, если оно не помещается */
         }
+        /* Боковая панель (инвентарь, внимательность, журнал) */
         .sidebar {
             background-color: #2d3748;
             border-radius: 1rem;
             padding: 1.25rem;
             min-width: 200px;
+            /* На мобильных устройствах будет занимать всю ширину */
         }
+        /* Главная область игры (история, кнопки действий) */
         .main-area {
             background-color: #2d3748;
             border-radius: 1rem;
             padding: 1.25rem;
-            flex-grow: 1;
+            flex-grow: 1; /* Позволяет главной области занимать оставшееся пространство */
         }
+        /* Заголовки секций */
         .section-title {
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 1rem;
             color: #cbd5e0;
         }
+        /* Текст истории */
         .story-text {
             line-height: 1.75;
             margin-bottom: 1.5rem;
             color: #e2e8f0;
         }
+        /* Кнопки действий */
         .action-button {
-            background-color: #4299e1; /* Blue button */
+            background-color: #4299e1; /* Синяя кнопка */
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 0.75rem;
@@ -89,6 +105,7 @@
             transform: translateY(0);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
+        /* Полоса внимательности */
         .attention-bar-container {
             width: 100%;
             background-color: #4a5568;
@@ -99,18 +116,18 @@
         }
         .attention-bar-fill {
             height: 100%;
-            background-color: #48bb78; /* Green for attention */
+            background-color: #48bb78; /* Зеленый для внимательности */
             border-radius: 0.5rem;
             transition: width 0.5s ease-in-out;
         }
 
-        /* Responsive layout for larger screens */
+        /* Адаптивный макет для больших экранов (настольные компьютеры) */
         @media (min-width: 768px) {
             .game-content {
-                flex-direction: row;
+                flex-direction: row; /* На больших экранах располагаем элементы в ряд */
             }
             .sidebar {
-                flex: 0 0 280px; /* Fixed width for sidebar on desktop */
+                flex: 0 0 280px; /* Фиксированная ширина для боковой панели на настольных компьютерах */
                 margin-right: 1.5rem;
             }
         }
@@ -161,21 +178,23 @@
     </div>
 
     <script>
+        // Игровые переменные
         let inventory = ["Старый блокнот", "Фонарик (слабый свет)"];
         let attention = 50;
         let journal = [
             { date: "12 июля, 2025", entry: "Прибыл в поместье Блэквуд. Атмосфера тяжелая, как предгрозовое небо. Дело об исчезновении лорда Аларика начинает принимать зловещий оборот." }
         ];
 
+        // Получаем ссылки на DOM-элементы
         const storyArea = document.getElementById('story-area');
         const inventoryList = document.getElementById('inventory-list');
         const attentionBarFill = document.getElementById('attention-bar-fill');
         const attentionValueText = document.getElementById('attention-value');
         const journalEntries = document.getElementById('journal-entries');
 
-        // Function to update inventory display
+        // Функция для обновления отображения инвентаря
         function updateInventory() {
-            inventoryList.innerHTML = ''; // Clear current list
+            inventoryList.innerHTML = ''; // Очищаем текущий список
             inventory.forEach(item => {
                 const li = document.createElement('li');
                 li.className = 'mb-1';
@@ -184,14 +203,14 @@
             });
         }
 
-        // Function to update attention display
+        // Функция для обновления отображения внимательности
         function updateAttention() {
-            attention = Math.max(0, Math.min(100, attention)); // Keep attention between 0 and 100
+            attention = Math.max(0, Math.min(100, attention)); // Ограничиваем внимательность от 0 до 100
             attentionBarFill.style.width = `${attention}%`;
             attentionValueText.textContent = `${attention}/100`;
         }
 
-        // Function to add a journal entry
+        // Функция для добавления записи в журнал
         function addJournalEntry(entryText) {
             const now = new Date();
             const dateString = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -207,14 +226,14 @@
             pEntry.textContent = entryText;
             journalEntries.appendChild(pEntry);
 
-            journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to bottom
+            journalEntries.scrollTop = journalEntries.scrollHeight; // Прокручиваем к низу
         }
 
-        // Initial updates
+        // Инициализация игры при загрузке
         updateInventory();
         updateAttention();
 
-        // Game interaction functions
+        // Функции взаимодействия с игрой
         function exploreGate() {
             storyArea.innerHTML = `
                 <p>Вы подходите к массивным кованым воротам. Они покрыты ржавчиной и паутиной, а замок кажется нетронутым десятилетиями. Сквозь прутья вы видите заросшую дорожку, ведущую к дому. Кажется, единственный способ пройти — это найти обходной путь или ключ.</p>
@@ -233,248 +252,7 @@
             attention += 10;
             updateAttention();
             addJournalEntry("Осмотрел сторожку. Нашел что-то блестящее. Надо рассмотреть поближе.");
-            // Example: Add an item to inventory
-            if (!inventory.includes("Ржавый ключ")) {
-                inventory.push("Ржавый ключ");
-                updateInventory();
-            }
-        }
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Наследство Теней - Детективная Игра</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #1a202c; /* Dark background for a mysterious feel */
-            color: #e2e8f0; /* Light text color */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 1rem;
-        }
-        .game-container {
-            background-color: #2d3748; /* Slightly lighter dark background for the container */
-            border-radius: 1.5rem; /* More rounded corners */
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5); /* Deeper shadow */
-            max-width: 960px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .header {
-            background-color: #4a5568; /* Header background */
-            border-bottom: 2px solid #2d3748;
-            padding: 1.5rem;
-            text-align: center;
-            font-size: 2.25rem; /* Larger title */
-            font-weight: 700;
-            color: #a0aec0; /* Lighter header text */
-            border-top-left-radius: 1.5rem;
-            border-top-right-radius: 1.5rem;
-        }
-        .game-content {
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
-            gap: 1.5rem;
-        }
-        .sidebar {
-            background-color: #2d3748;
-            border-radius: 1rem;
-            padding: 1.25rem;
-            min-width: 200px;
-        }
-        .main-area {
-            background-color: #2d3748;
-            border-radius: 1rem;
-            padding: 1.25rem;
-            flex-grow: 1;
-        }
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #cbd5e0;
-        }
-        .story-text {
-            line-height: 1.75;
-            margin-bottom: 1.5rem;
-            color: #e2e8f0;
-        }
-        .action-button {
-            background-color: #4299e1; /* Blue button */
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            border: none;
-            display: inline-block;
-            text-align: center;
-        }
-        .action-button:hover {
-            background-color: #3182ce;
-            transform: translateY(-2px);
-        }
-        .action-button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        .attention-bar-container {
-            width: 100%;
-            background-color: #4a5568;
-            border-radius: 0.5rem;
-            height: 1.25rem;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-        .attention-bar-fill {
-            height: 100%;
-            background-color: #48bb78; /* Green for attention */
-            border-radius: 0.5rem;
-            transition: width 0.5s ease-in-out;
-        }
-
-        /* Responsive layout for larger screens */
-        @media (min-width: 768px) {
-            .game-content {
-                flex-direction: row;
-            }
-            .sidebar {
-                flex: 0 0 280px; /* Fixed width for sidebar on desktop */
-                margin-right: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="game-container">
-        <div class="header">
-            Наследство Теней
-        </div>
-
-        <div class="game-content">
-            <div class="sidebar">
-                <div class="section-title">Инвентарь</div>
-                <ul id="inventory-list" class="list-disc list-inside text-gray-300">
-                    <li class="mb-1">Старый блокнот</li>
-                    <li class="mb-1">Фонарик (слабый свет)</li>
-                </ul>
-
-                <div class="section-title mt-6">Внимательность</div>
-                <div class="attention-bar-container">
-                    <div id="attention-bar-fill" class="attention-bar-fill" style="width: 50%;"></div>
-                </div>
-                <p id="attention-value" class="text-sm text-gray-400 mt-2">50/100</p>
-
-                <div class="section-title mt-6">Журнал Детектива</div>
-                <div id="journal-entries" class="text-sm text-gray-300 h-48 overflow-y-auto pr-2 custom-scrollbar">
-                    <p class="mb-2"><em>12 июля, 2025</em></p>
-                    <p class="mb-2">Прибыл в поместье Блэквуд. Атмосфера тяжелая, как предгрозовое небо. Дело об исчезновении лорда Аларика начинает принимать зловещий оборот.</p>
-                </div>
-            </div>
-
-            <div class="main-area">
-                <div class="section-title">Текущая Ситуация</div>
-                <div id="story-area" class="story-text">
-                    <p>Вы стоите перед массивными, скрипучими воротами поместья Блэквуд. Высокие, поросшие мхом стены окружают территорию, скрывая от любопытных глаз тайны, которые они хранят. Воздух пропитан запахом сырой земли и старого камня. Над головой сгущаются тучи, обещая скорый ливень. Ваша цель — найти лорда Аларика, который таинственно исчез несколько дней назад.</p>
-                    <p class="mt-4">Слева от вас — покосившаяся сторожка, откуда, кажется, никто не выходил уже много лет. Справа — густые заросли кустарника, скрывающие что-то в своей тени. Прямо перед вами — длинная, заросшая аллея, ведущая к мрачному особняку.</p>
-                </div>
-
-                <div class="flex flex-wrap gap-4 mt-6">
-                    <button class="action-button" onclick="exploreGate()">Исследовать ворота</button>
-                    <button class="action-button" onclick="exploreLodge()">Осмотреть сторожку</button>
-                    <button class="action-button" onclick="exploreBushes()">Заглянуть в кусты</button>
-                    <button class="action-button" onclick="advanceToMansion()">Идти к особняку</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let inventory = ["Старый блокнот", "Фонарик (слабый свет)"];
-        let attention = 50;
-        let journal = [
-            { date: "12 июля, 2025", entry: "Прибыл в поместье Блэквуд. Атмосфера тяжелая, как предгрозовое небо. Дело об исчезновении лорда Аларика начинает принимать зловещий оборот." }
-        ];
-
-        const storyArea = document.getElementById('story-area');
-        const inventoryList = document.getElementById('inventory-list');
-        const attentionBarFill = document.getElementById('attention-bar-fill');
-        const attentionValueText = document.getElementById('attention-value');
-        const journalEntries = document.getElementById('journal-entries');
-
-        // Function to update inventory display
-        function updateInventory() {
-            inventoryList.innerHTML = ''; // Clear current list
-            inventory.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'mb-1';
-                li.textContent = item;
-                inventoryList.appendChild(li);
-            });
-        }
-
-        // Function to update attention display
-        function updateAttention() {
-            attention = Math.max(0, Math.min(100, attention)); // Keep attention between 0 and 100
-            attentionBarFill.style.width = `${attention}%`;
-            attentionValueText.textContent = `${attention}/100`;
-        }
-
-        // Function to add a journal entry
-        function addJournalEntry(entryText) {
-            const now = new Date();
-            const dateString = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-            journal.push({ date: dateString, entry: entryText });
-
-            const pDate = document.createElement('p');
-            pDate.className = 'mb-2';
-            pDate.innerHTML = `<em>${dateString}</em>`;
-            journalEntries.appendChild(pDate);
-
-            const pEntry = document.createElement('p');
-            pEntry.className = 'mb-2';
-            pEntry.textContent = entryText;
-            journalEntries.appendChild(pEntry);
-
-            journalEntries.scrollTop = journalEntries.scrollHeight; // Scroll to bottom
-        }
-
-        // Initial updates
-        updateInventory();
-        updateAttention();
-
-        // Game interaction functions
-        function exploreGate() {
-            storyArea.innerHTML = `
-                <p>Вы подходите к массивным кованым воротам. Они покрыты ржавчиной и паутиной, а замок кажется нетронутым десятилетиями. Сквозь прутья вы видите заросшую дорожку, ведущую к дому. Кажется, единственный способ пройти — это найти обходной путь или ключ.</p>
-                <p class="mt-4 text-gray-400"><em>(Ваша внимательность немного снизилась, так как вы не нашли ничего полезного.)</em></p>
-            `;
-            attention -= 5;
-            updateAttention();
-            addJournalEntry("Исследовал ворота. Заперты. Нужен обходной путь.");
-        }
-
-        function exploreLodge() {
-            storyArea.innerHTML = `
-                <p>Вы осторожно приближаетесь к покосившейся сторожке. Дверь висит на одной петле, а окна разбиты. Внутри царит запустение: пыль, обломки мебели и запах плесени. На полу, среди мусора, вы замечаете что-то блестящее.</p>
-                <p class="mt-4 text-gray-400"><em>(Ваша внимательность повысилась! Вы нашли что-то интересное.)</em></p>
-            `;
-            attention += 10;
-            updateAttention();
-            addJournalEntry("Осмотрел сторожку. Нашел что-то блестящее. Надо рассмотреть поближе.");
-            // Example: Add an item to inventory
+            // Пример: Добавляем предмет в инвентарь
             if (!inventory.includes("Ржавый ключ")) {
                 inventory.push("Ржавый ключ");
                 updateInventory();
@@ -496,31 +274,7 @@
                 <p>Вы решительно шагаете по заросшей аллее, ведущей к особняку. С каждым шагом мрачное здание становится все ближе, его темные окна словно смотрят на вас. Воздух становится холоднее, и вы чувствуете, как по спине пробегает холодок. Приготовьтесь, самое интересное только начинается...</p>
                 <p class="mt-4 text-gray-400"><em>(Продолжение следует...)</em></p>
             `;
-            // Disable buttons after advancing
-            const buttons = document.querySelectorAll('.action-button');
-            buttons.forEach(button => button.disabled = true);
-            addJournalEntry("Двинулся к особняку. Предчувствие чего-то важного.");
-        }
-    </script>
-</body>
-</html>
-
-        function exploreBushes() {
-            storyArea.innerHTML = `
-                <p>Вы пробираетесь сквозь густые заросли кустарника. Ветки цепляются за одежду, а под ногами хрустят сухие листья. Вскоре вы натыкаетесь на старую, едва заметную тропинку, ведущую вдоль стены поместья. Она кажется достаточно узкой, чтобы пролезть.</p>
-                <p class="mt-4 text-gray-400"><em>(Кажется, вы нашли обходной путь!)</em></p>
-            `;
-            attention += 5;
-            updateAttention();
-            addJournalEntry("Нашел узкую тропинку за кустами. Возможно, это обходной путь.");
-        }
-
-        function advanceToMansion() {
-            storyArea.innerHTML = `
-                <p>Вы решительно шагаете по заросшей аллее, ведущей к особняку. С каждым шагом мрачное здание становится все ближе, его темные окна словно смотрят на вас. Воздух становится холоднее, и вы чувствуете, как по спине пробегает холодок. Приготовьтесь, самое интересное только начинается...</p>
-                <p class="mt-4 text-gray-400"><em>(Продолжение следует...)</em></p>
-            `;
-            // Disable buttons after advancing
+            // Отключаем кнопки после перехода
             const buttons = document.querySelectorAll('.action-button');
             buttons.forEach(button => button.disabled = true);
             addJournalEntry("Двинулся к особняку. Предчувствие чего-то важного.");
