@@ -74,6 +74,25 @@
             max-width: 48%;
             box-sizing: border-box;
         }
+        /* Стиль для кнопок исследования */
+        .examine-button {
+            background-color: #8bb14c; /* Зеленый для исследования */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background-color 0.3s ease;
+            margin-top: 5px;
+            display: block; /* Каждая кнопка на новой строке */
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .examine-button:hover {
+            background-color: #6a8c3d;
+        }
+
         @media (max-width: 480px) {
             .action-button {
                 max-width: 100%;
@@ -94,7 +113,7 @@
             border-top: 1px solid #ddd;
             padding-top: 15px;
         }
-        #inventory, #attention-info {
+        #inventory, #attention-info, #journal-section {
             background-color: #f0f0f0; /* Светлее для инфо-блоков */
             border: 1px solid #ccc;
             padding: 10px;
@@ -137,6 +156,18 @@
             text-align: center;
             margin-top: 20px;
         }
+        #journal-content {
+            width: 100%;
+            min-height: 100px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: 'Georgia', serif;
+            font-size: 0.95em;
+            background-color: #fff;
+            box-sizing: border-box;
+            resize: vertical; /* Разрешить изменение размера по вертикали */
+        }
     </style>
 </head>
 <body>
@@ -144,7 +175,8 @@
         <h1>Наследство Теней</h1>
         <div id="story-text"></div>
         <div id="actions">
-            </div>
+            <!-- Кнопки действий будут здесь -->
+        </div>
         <div id="game-info">
             <div id="inventory">
                 <h2>Инвентарь:</h2>
@@ -160,6 +192,10 @@
                 <p id="attention-text">50/100</p>
             </div>
         </div>
+        <div id="journal-section">
+            <h2>Журнал Детектива</h2>
+            <textarea id="journal-content" placeholder="Здесь вы можете записывать свои заметки и улики..."></textarea>
+        </div>
     </div>
 
     <script>
@@ -167,7 +203,8 @@
         const ITEMS = {
             "письмо_юриста": { name: "Письмо от Юриста", description: "Официальное письмо о наследстве, от юридической фирмы 'Гримшоу и Партнеры'." },
             "старый_ключ": { name: "Старый ключ", description: "Массивный, потемневший ключ с необычной гравировкой. Возможно, от особняка." },
-            "странная_записка": { name: "Странная Записка", description: "Пожелтевшая бумага с неразборчивым почерком и странными символами. Похоже на шифр.", type: "puzzle" }
+            "странная_записка": { name: "Странная Записка", description: "Пожелтевшая бумага с неразборчивым почерком и странными символами. Похоже на шифр.", type: "puzzle" },
+            "лупа": { name: "Лупа", description: "Старая, но качественная лупа. Поможет рассмотреть мелкие детали.", effect: "increase_attention" }
         };
 
         const LOCATIONS = {
@@ -175,7 +212,22 @@
                 name: "Юридическая Контора 'Гримшоу и Партнеры'",
                 description: "Вы сидите в душном кабинете, пропахшем старой бумагой и надеждами. Пожилой юрист, мистер Гримшоу, медленно проталкивает по столу пожелтевший конверт. 'Это касается вашего дальнего родственника...', - начинает он.",
                 exits: { "Открыть конверт": "получение_наследства" },
-                items: [], // Здесь пока нет предметов, они появятся после действия
+                items: [],
+                examineActions: {
+                    "Осмотреть кабинет": {
+                        description: "Кабинет выглядит обычным, но на полке вы замечаете старую, пыльную лупу.",
+                        effect: () => {
+                            if (!inventory.includes("лупа")) {
+                                storyTextElement.innerText += "\n\nВы нашли старую лупу!";
+                                takeItem("лупа", LOCATIONS["юридическая_контора"]); // Добавляем лупу в инвентарь
+                            } else {
+                                storyTextElement.innerText += "\n\nВы уже осмотрели кабинет и взяли лупу.";
+                            }
+                            attentionLevel += 5; // Немного увеличиваем внимательность за наблюдение
+                            updateAttention();
+                        }
+                    }
+                },
                 attentionImpact: 0,
                 visited: false
             },
@@ -183,8 +235,20 @@
                 name: "Получение Наследства",
                 description: "Внутри конверта вы находите официальные бумаги о вашем прадеде, о котором вы едва слышали, свидетельство о смерти и... старый, необычно массивный ключ. К нему прикреплена пожелтевшая записка с символами. 'Всё это ваше, мистер/мисс...', - говорит юрист, - 'включая особняк на окраине города. Хотя... я бы не спешил туда ехать.'",
                 exits: { "Спросить об особняке": "разговор_юрист_особняк", "Взять ключ и записку": "покинуть_контору" },
-                items: ["старый_ключ", "странная_записка"], // Предметы появляются здесь
-                attentionImpact: 10, // Увеличивает внимательность, так как герой обращает внимание на детали
+                items: ["старый_ключ", "странная_записка"],
+                examineActions: {
+                    "Внимательно изучить письмо": {
+                        description: "Помимо официальных формулировок, вы замечаете на полях письма еле заметную водяную метку в виде переплетенных инициалов 'Э.Т.'.",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nВы нашли еле заметную водяную метку 'Э.Т.' на письме. Это может быть важно!";
+                            // Можно добавить эту информацию в журнал автоматически
+                            journalContentElement.value += "\n- На письме обнаружена водяная метка: Э.Т.";
+                            attentionLevel += 5;
+                            updateAttention();
+                        }
+                    }
+                },
+                attentionImpact: 10,
                 visited: false
             },
             "разговор_юрист_особняк": {
@@ -192,6 +256,16 @@
                 description: "Мистер Гримшоу поправляет очки. 'Особняк... он давно пустует. Ходят слухи. Странные вещи происходили. Никто не хочет покупать. Ваш прадед был... эксцентричным человеком. Некоторые считают, что он что-то скрывал.' Юрист смотрит на вас с беспокойством.",
                 exits: { "Покинуть контору": "покинуть_контору" },
                 items: [],
+                examineActions: {
+                    "Попытаться выведать больше": {
+                        description: "Юрист нервно потирает руки. 'Я не могу разглашать детали. Просто будьте осторожны. Ваш прадед... он был одержим тайнами.'",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nЮрист явно что-то недоговаривает, но больше информации из него не вытянуть.";
+                            attentionLevel -= 5; // Немного теряем внимательность, если не удалось ничего узнать
+                            updateAttention();
+                        }
+                    }
+                },
                 attentionImpact: 5,
                 visited: false
             },
@@ -200,6 +274,16 @@
                 description: "Вы покидаете душную контору. На улице яркий свет дня кажется неестественным после мрачной атмосферы. В руках у вас ключ и странная записка. Мысли о заброшенном особняке и словах юриста не дают покоя. Кажется, ваша обычная жизнь только что закончилась.",
                 exits: { "Отправиться в особняк": "особняк_снаружи", "Изучить записку дома": "изучение_записки" },
                 items: [],
+                examineActions: {
+                    "Подумать о прадеде": {
+                        description: "Вы пытаетесь вспомнить хоть что-то о своем прадеде, но в памяти лишь смутные, обрывочные сведения о его затворническом образе жизни.",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nПока ничего конкретного о прадеде вспомнить не удается. Нужно больше информации.";
+                            attentionLevel += 2; // Небольшое увеличение внимательности за размышления
+                            updateAttention();
+                        }
+                    }
+                },
                 attentionImpact: 0,
                 visited: false
             },
@@ -208,25 +292,174 @@
                 description: "Вы стоите перед массивными чугунными воротами. За ними — заросший сад и сам особняк, темный и молчаливый. Окна кажутся пустыми глазницами, смотрящими на вас. Воздух вокруг кажется плотным, а тишина — неестественной. Где-то вдалеке слышится карканье ворона.",
                 exits: { "Попытаться открыть ворота": "ворота_особняка", "Осмотреть окрестности": "осмотр_особняка_снаружи" },
                 items: [],
+                examineActions: {
+                    "Осмотреть ворота": {
+                        description: "Ворота массивные, покрыты ржавчиной. Замок выглядит старым, но прочным. Кажется, ключ должен подойти.",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nВорота выглядят так, будто их давно не открывали. Ваш ключ может быть полезен.";
+                            attentionLevel += 5;
+                            updateAttention();
+                        }
+                    },
+                    "Посмотреть на окна особняка": {
+                        description: "Окна грязные, некоторые разбиты. За одним из них, на втором этаже, вам кажется, мелькнула тень...",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nВам показалось, или за окном что-то движется? Это тревожит.";
+                            // Здесь можно добавить эффект страха, если бы он был
+                            attentionLevel += 3;
+                            updateAttention();
+                        }
+                    }
+                },
                 attentionImpact: 15,
+                visited: false
+            },
+            "ворота_особняка": {
+                name: "Ворота Особняка",
+                description: "Вы подошли к воротам. Замок выглядит старым и заржавевшим. Ваш ключ должен подойти.",
+                exits: {}, // Динамически добавляются
+                items: [],
+                examineActions: {
+                    "Использовать ключ": {
+                        description: "Вы вставляете ключ в замок. Со скрипом и скрежетом, замок поддается. Ворота медленно отворяются, открывая путь в заросший сад.",
+                        effect: () => {
+                            if (inventory.includes("старый_ключ")) {
+                                storyTextElement.innerText += "\n\nКлюч подошел! Ворота отворились. Теперь можно войти в сад.";
+                                LOCATIONS["ворота_особняка"].exits["Войти в сад"] = "сад_особняка"; // Добавляем новый выход
+                                displayLocation("ворота_особняка"); // Обновляем кнопки
+                                attentionLevel += 10;
+                                updateAttention();
+                            } else {
+                                storyTextElement.innerText += "\n\nУ вас нет подходящего ключа. Ворота наглухо заперты.";
+                            }
+                        }
+                    }
+                },
+                attentionImpact: 0,
+                visited: false
+            },
+            "сад_особняка": {
+                name: "Заросший Сад",
+                description: "Вы входите в сад. Когда-то здесь, вероятно, были прекрасные клумбы, но теперь это дикие заросли. Высокие сорняки, колючие кусты и искривленные деревья создают лабиринт. В воздухе витает запах сырости и чего-то еще... чего-то старого и забытого.",
+                exits: { "Идти к дому": "вход_в_особняк", "Осмотреть сад": "осмотр_сада" },
+                items: [],
+                examineActions: {
+                    "Прислушаться к звукам": {
+                        description: "Вы слышите легкий шелест в кустах, но это, скорее всего, ветер. Или нет?",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nКажется, ничего необычного. Или это просто нервы?";
+                            attentionLevel += 2;
+                            updateAttention();
+                        }
+                    }
+                },
+                attentionImpact: 10,
+                visited: false
+            },
+            "осмотр_особняка_снаружи": {
+                name: "Осмотр Окрестностей Особняка",
+                description: "Вы обходите особняк по периметру, стараясь найти другой вход или что-то необычное. Стены покрыты плющом, некоторые окна заколочены. Сзади дома вы видите старый сарай, полуразрушенный.",
+                exits: { "Вернуться к воротам": "особняк_снаружи", "Осмотреть сарай": "старый_сарай" },
+                items: [],
+                examineActions: {
+                    "Изучить стены особняка": {
+                        description: "На одной из стен, скрытой плющом, вы замечаете выцарапанные символы, похожие на те, что на записке. Они едва различимы.",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nНа стене особняка найдены символы, похожие на те, что на записке! Это подтверждает, что записка связана с этим местом.";
+                            journalContentElement.value += "\n- Символы на стене особняка совпадают с символами на записке.";
+                            attentionLevel += 15;
+                            updateAttention();
+                        }
+                    }
+                },
+                attentionImpact: 10,
+                visited: false
+            },
+            "старый_сарай": {
+                name: "Старый Сарай",
+                description: "Деревянный сарай почти развалился. Дверь висит на одной петле, внутри темно и пахнет плесенью и чем-то металлическим. Кажется, здесь давно никто не был.",
+                exits: { "Вернуться к особняку": "осмотр_особняка_снаружи", "Войти в сарай": "внутри_сарая" },
+                items: [],
+                examineActions: {
+                    "Осмотреть замок": {
+                        description: "Замок на двери сарая сломан, его легко открыть.",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nЗамок сломан, можно войти.";
+                        }
+                    }
+                },
+                attentionImpact: 5,
+                visited: false
+            },
+            "внутри_сарая": {
+                name: "Внутри Сарая",
+                description: "Внутри сарая беспорядок: старые инструменты, ящики, покрытые паутиной. В углу вы замечаете что-то блестящее под грудой тряпок.",
+                exits: { "Выйти из сарая": "старый_сарай" },
+                items: ["старая_лопата"], // Пример предмета
+                examineActions: {
+                    "Осмотреть блестящий предмет": {
+                        description: "Под тряпками лежит старая, но крепкая лопата.",
+                        effect: () => {
+                            if (!inventory.includes("старая_лопата")) {
+                                storyTextElement.innerText += "\n\nВы нашли старую лопату. Возможно, пригодится в саду.";
+                                takeItem("старая_лопата", LOCATIONS["внутри_сарая"]);
+                            } else {
+                                storyTextElement.innerText += "\n\nВы уже взяли лопату.";
+                            }
+                            attentionLevel += 5;
+                            updateAttention();
+                        }
+                    }
+                },
+                attentionImpact: 10,
                 visited: false
             },
             "изучение_записки": {
                 name: "Изучение Странной Записки",
                 description: "Дома, в спокойной обстановке, вы раскладываете пожелтевшую записку. Символы на ней кажутся бессмысленными, но в них чувствуется какая-то логика. Это явно шифр. Ваша внимательность поможет вам.",
-                exits: { "Попытаться расшифровать": "попытка_расшифровки_записки", "Отправиться в особняк": "особняк_снаружи" },
+                exits: { "Отправиться в особняк": "особняк_снаружи" },
                 items: [],
+                examineActions: {
+                    "Попытаться расшифровать": {
+                        description: "Вы сосредоточенно изучаете записку. Некоторые символы кажутся повторяющимися, другие напоминают обрывки слов. Это сложно, но вы чувствуете, что разгадка близка. (Требуется определенный уровень внимательности)",
+                        effect: () => {
+                            if (attentionLevel >= 60) { // Требуется 60 внимательности для успешной расшифровки
+                                storyTextElement.innerText += "\n\nВнезапно символы складываются в слова! Это карта... и инструкции. Вы расшифровали ее! На карте указано место в саду особняка, отмеченное как 'Старый Колодец'.";
+                                journalContentElement.value += "\n- Записка расшифрована! Указано место: Старый Колодец в саду.";
+                                // Добавляем новый выход или предмет после успешной расшифровки
+                                LOCATIONS["изучение_записки"].exits["Вернуться в особняк с новой информацией"] = "сад_особняка";
+                                LOCATIONS["сад_особняка"].exits["Найти Старый Колодец"] = "старый_колодец"; // Добавляем новый путь в саду
+                                attentionLevel += 20; // Значительное увеличение внимательности за успешную расшифровку
+                                updateAttention();
+                                displayLocation(currentLocation); // Обновляем кнопки
+                            } else {
+                                storyTextElement.innerText += "\n\nВы пытаетесь, но символы слишком запутаны. Вам не хватает внимательности, чтобы понять их. Возможно, нужно найти что-то, что поможет вам сосредоточиться или увеличит вашу внимательность.";
+                                attentionLevel = Math.max(0, attentionLevel - 10); // Уменьшаем внимательность при неудаче
+                                updateAttention();
+                            }
+                        }
+                    }
+                },
                 attentionImpact: 5,
                 visited: false
             },
-            "попытка_расшифровки_записки": {
-                name: "Попытка Расшифровки",
-                description: "Вы сосредоточенно изучаете записку. Некоторые символы кажутся повторяющимися, другие напоминают обрывки слов. Это сложно, но вы чувствуете, что разгадка близка. (Требуется определенный уровень внимательности)",
-                exits: {}, // Динамически добавляются после проверки внимания
+            "старый_колодец": {
+                name: "Старый Колодец",
+                description: "В заросшей части сада вы находите старый, полуразрушенный колодец. Его края покрыты мхом, а внутри царит непроглядная тьма. От него веет холодом и чем-то... очень старым.",
+                exits: { "Вернуться в сад": "сад_особняка" },
                 items: [],
-                attentionImpact: -10, // Может уменьшить внимательность, если не получится
-                visited: false,
-                requiredAttention: 60 // Пример: Требуется 60 внимательности для успешной расшифровки
+                examineActions: {
+                    "Заглянуть в колодец": {
+                        description: "Вы заглядываете в колодец. Там очень темно. Вы слышите слабый плеск воды и... что-то еще, похожее на шепот.",
+                        effect: () => {
+                            storyTextElement.innerText += "\n\nКолодец кажется очень глубоким и таинственным. Что-то там есть...";
+                            attentionLevel += 5;
+                            updateAttention();
+                        }
+                    }
+                },
+                attentionImpact: 15,
+                visited: false
             }
             // Добавьте больше локаций по мере развития сюжета
         };
@@ -243,6 +476,7 @@
         const inventoryListElement = document.getElementById('inventory-list');
         const attentionFillElement = document.getElementById('attention-fill');
         const attentionTextElement = document.getElementById('attention-text');
+        const journalContentElement = document.getElementById('journal-content'); // Элемент для журнала
 
         // --- Функции Игровой Логики ---
 
@@ -265,39 +499,12 @@
 
             actionsElement.innerHTML = ""; // Очищаем предыдущие действия
 
-            // Динамические действия в зависимости от локации
-            if (locationId === "попытка_расшифровки_записки") {
-                if (attentionLevel >= location.requiredAttention) {
-                    storyTextElement.innerText += "\n\nВнезапно символы складываются в слова! Это карта... и инструкции. Вы расшифровали ее!";
-                    // Добавляем новые выходы или предметы после успешной расшифровки
-                    const newPuzzleExitButton = document.createElement('button');
-                    newPuzzleExitButton.classList.add('action-button');
-                    newPuzzleExitButton.innerText = "Расшифрованная карта указывает на..."; // Пример
-                    newPuzzleExitButton.onclick = () => {
-                        currentLocation = "место_по_карте"; // Новая локация
-                        displayLocation(currentLocation);
-                    };
-                    actionsElement.appendChild(newPuzzleExitButton);
-                } else {
-                    storyTextElement.innerText += "\n\nВы пытаетесь, но символы слишком запутаны. Вам не хватает внимательности, чтобы понять их. Возможно, нужно найти что-то, что поможет вам сосредоточиться или увеличит вашу внимательность.";
-                    const goBackButton = document.createElement('button');
-                    goBackButton.classList.add('action-button');
-                    goBackButton.innerText = "Вернуться к изучению записки";
-                    goBackButton.onclick = () => displayLocation("изучение_записки");
-                    actionsElement.appendChild(goBackButton);
-                    attentionLevel = Math.max(0, attentionLevel - 10); // Уменьшаем внимательность при неудаче
-                    updateAttention();
-                }
-            }
-
-
             // Добавляем кнопки переходов (выходов)
             for (const exitText in location.exits) {
                 const button = document.createElement('button');
                 button.classList.add('action-button');
                 button.innerText = exitText;
                 button.onclick = () => {
-                    // Обработка конкретных переходов с условиями, если нужно
                     currentLocation = location.exits[exitText];
                     displayLocation(currentLocation);
                 };
@@ -306,7 +513,6 @@
 
             // Добавляем кнопки для подбора предметов
             if (location.items && location.items.length > 0) {
-                // Создаем временный массив для предметов, которые можно взять в этой локации
                 let itemsAvailableInLocation = location.items.filter(itemId => !inventory.includes(itemId));
 
                 if (itemsAvailableInLocation.length > 0) {
@@ -316,14 +522,17 @@
                             const button = document.createElement('button');
                             button.classList.add('action-button');
                             button.innerText = `Взять: ${item.name}`;
-                            button.onclick = () => takeItem(itemId, location);
+                            button.onclick = (event) => {
+                                event.stopPropagation(); // Предотвращаем срабатывание других кликов
+                                takeItem(itemId, location);
+                            };
                             actionsElement.appendChild(button);
                         }
                     });
                 }
             }
 
-            // Добавляем кнопки для использования предметов из инвентаря (если есть эффект)
+            // Добавляем кнопки для использования предметов из инвентаря
             if (inventory.length > 0) {
                 inventory.forEach(itemId => {
                     const item = ITEMS[itemId];
@@ -331,10 +540,28 @@
                         const button = document.createElement('button');
                         button.classList.add('action-button');
                         button.innerText = `Использовать: ${item.name}`;
-                        button.onclick = () => useItem(itemId);
+                        button.onclick = (event) => {
+                            event.stopPropagation();
+                            useItem(itemId);
+                        };
                         actionsElement.appendChild(button);
                     }
                 });
+            }
+
+            // Добавляем кнопки для исследования (Examine Actions)
+            if (location.examineActions) {
+                for (const actionText in location.examineActions) {
+                    const button = document.createElement('button');
+                    button.classList.add('examine-button'); // Новый класс для стилизации
+                    button.innerText = `Исследовать: ${actionText}`;
+                    button.onclick = (event) => {
+                        event.stopPropagation();
+                        location.examineActions[actionText].effect();
+                        displayLocation(currentLocation); // Обновляем кнопки после исследования
+                    };
+                    actionsElement.appendChild(button);
+                }
             }
         }
 
@@ -360,10 +587,7 @@
             attentionFillElement.style.width = `${percentage}%`;
             attentionTextElement.innerText = `${attentionLevel}/${MAX_ATTENTION}`;
 
-            // Пример: если внимательность падает слишком низко
-            if (attentionLevel < 20 && attentionLevel > 0) {
-                // Можно добавить легкие негативные эффекты или предупреждения
-            } else if (attentionLevel === 0) {
+            if (attentionLevel === 0) {
                 endGame("недостаточно_внимательности");
             }
         }
@@ -372,7 +596,9 @@
             if (!inventory.includes(itemId)) {
                 inventory.push(itemId);
                 // Удаляем предмет из локации, чтобы его нельзя было взять снова
-                location.items = location.items.filter(item => item !== itemId);
+                if (location && location.items) { // Проверяем, что location и items существуют
+                    location.items = location.items.filter(item => item !== itemId);
+                }
                 updateInventory();
                 displayLocation(currentLocation); // Обновляем кнопки действий
             }
@@ -382,21 +608,22 @@
             const item = ITEMS[itemId];
             if (item && item.effect) {
                 switch (item.effect) {
-                    // Добавьте эффекты для предметов, если они будут
-                    // case "увеличить_внимательность":
-                    //     attentionLevel += 20;
-                    //     storyTextElement.innerText += "\nВы чувствуете прилив ясности. Ваша внимательность улучшилась.";
-                    //     break;
+                    case "increase_attention":
+                        attentionLevel += 20;
+                        storyTextElement.innerText += "\n\nВы используете лупу. Мир вокруг становится четче, детали бросаются в глаза. Ваша внимательность улучшилась!";
+                        // Лупа не удаляется, так как она может быть многоразовой
+                        break;
                     default:
-                        storyTextElement.innerText += `\nВы пытаетесь использовать ${item.name}, но сейчас это не дает никакого видимого эффекта.`;
+                        storyTextElement.innerText += `\n\nВы пытаетесь использовать ${item.name}, но сейчас это не дает никакого видимого эффекта.`;
                         break;
                 }
-                // inventory = inventory.filter(id => id !== itemId); // Удаляем использованный предмет, если он одноразовый
+                // Если предмет одноразовый, удалите его из инвентаря
+                // inventory = inventory.filter(id => id !== itemId);
                 updateInventory();
                 updateAttention();
                 displayLocation(currentLocation); // Обновляем кнопки действий
             } else {
-                storyTextElement.innerText += `\nВы не можете использовать ${item.name} таким образом.`;
+                storyTextElement.innerText += `\n\nВы не можете использовать ${item.name} таким образом.`;
             }
         }
 
